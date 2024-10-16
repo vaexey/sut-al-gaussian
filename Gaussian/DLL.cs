@@ -10,18 +10,23 @@ namespace Gaussian
 {
     public class DLL : IDisposable
     {
-        //[DllImport("KERNEL32.dll", ExactSpelling = true, SetLastError = true)]
-        //[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-        //public static extern HMODULE LoadLibraryW(PCWSTR lpLibFileName);
+        WINAPI.HINSTANCE instance;
 
         public DLL(string path)
         {
+            var pcstrPath = WINAPI.CPCSTR(path);
+            instance = WINAPI.LoadLibraryA(pcstrPath);
+            WINAPI.FRPCSTR(pcstrPath);
 
+            if(instance.IsNull)
+            {
+                throw new DllNotFoundException($"LoadLibraryA on \"{path}\" returned nullptr");
+            }
         }
 
         public void Dispose()
         {
-
+            // TODO
         }
     }
 
