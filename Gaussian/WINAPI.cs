@@ -18,6 +18,10 @@ namespace Gaussian
 
         [DllImport("KERNEL32.dll", ExactSpelling = true, SetLastError = true)]
         [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        public static extern bool FreeLibrary(HMODULE hLibModule);
+
+        [DllImport("KERNEL32.dll", ExactSpelling = true, SetLastError = true)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         public static extern FARPROC GetProcAddress(
             HMODULE hModule,
             PCSTR lpProcName);
@@ -64,8 +68,10 @@ namespace Gaussian
         
         public static unsafe PCSTR CPCSTR(string value)
         {
+            var buffer = Encoding.ASCII.GetBytes(value);
+
             return new PCSTR(
-                    (byte*) GCHandle.Alloc(value, GCHandleType.Pinned)
+                    (byte*) GCHandle.Alloc(buffer, GCHandleType.Pinned)
                     .AddrOfPinnedObject()
                 );
         }
