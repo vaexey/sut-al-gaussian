@@ -35,7 +35,7 @@
             tabControl1 = new TabControl();
             tabPageSet = new TabPage();
             groupBox3 = new GroupBox();
-            button3 = new Button();
+            startBtn = new Button();
             label11 = new Label();
             button2 = new Button();
             textBox2 = new TextBox();
@@ -152,7 +152,7 @@
             // groupBox3
             // 
             groupBox3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBox3.Controls.Add(button3);
+            groupBox3.Controls.Add(startBtn);
             groupBox3.Controls.Add(label11);
             groupBox3.Controls.Add(button2);
             groupBox3.Controls.Add(textBox2);
@@ -166,15 +166,16 @@
             groupBox3.TabStop = false;
             groupBox3.Text = "Process";
             // 
-            // button3
+            // startBtn
             // 
-            button3.Anchor = AnchorStyles.Top;
-            button3.Location = new Point(274, 80);
-            button3.Name = "button3";
-            button3.Size = new Size(75, 23);
-            button3.TabIndex = 11;
-            button3.Text = "Start";
-            button3.UseVisualStyleBackColor = true;
+            startBtn.Anchor = AnchorStyles.Top;
+            startBtn.Location = new Point(274, 80);
+            startBtn.Name = "startBtn";
+            startBtn.Size = new Size(75, 23);
+            startBtn.TabIndex = 11;
+            startBtn.Text = "Start";
+            startBtn.UseVisualStyleBackColor = true;
+            startBtn.Click += startBtn_Click;
             // 
             // label11
             // 
@@ -493,7 +494,7 @@
         private Label label4;
         private Label label9;
         private GroupBox groupBox3;
-        private Button button3;
+        private Button startBtn;
         private Label label11;
         private Button button2;
         private TextBox textBox2;

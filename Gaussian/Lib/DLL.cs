@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gaussian
+namespace Gaussian.Lib
 {
     public class DLL : IDisposable
     {
@@ -19,7 +19,7 @@ namespace Gaussian
             instance = WINAPI.LoadLibraryA(pcstrPath);
             //WINAPI.FRPCSTR(pcstrPath);
 
-            if(instance.IsNull)
+            if (instance.IsNull)
             {
                 throw new DllNotFoundException(
                     $"LoadLibraryA on \"{path}\" returned nullptr"
@@ -33,7 +33,7 @@ namespace Gaussian
             var proc = WINAPI.GetProcAddress(instance, pcstrName);
             //WINAPI.FRPCSTR(pcstrName);
 
-            if(proc.IsNull)
+            if (proc.IsNull)
             {
                 throw new NullReferenceException(
                     $"GetProcAddress with \"{name}\" returned nullptr"
@@ -46,8 +46,8 @@ namespace Gaussian
         public void Dispose()
         {
             var disposeResult = WINAPI.FreeLibrary(instance);
-            
-            if(!disposeResult)
+
+            if (!disposeResult)
             {
                 throw new SystemException("FreeLibrary returned nullptr");
             }

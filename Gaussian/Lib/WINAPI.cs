@@ -5,9 +5,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static Gaussian.WINAPI;
+using static Gaussian.Lib.WINAPI;
 
-namespace Gaussian
+namespace Gaussian.Lib
 {
     // Credit: https://www.pinvoke.dev/
     public static class WINAPI
@@ -59,19 +59,19 @@ namespace Gaussian
                 }
             }
 
-            public override string ToString() => Value is null ? string.Empty : new string((sbyte*)Value, 0, Length, System.Text.Encoding.Default);
+            public override string ToString() => Value is null ? string.Empty : new string((sbyte*)Value, 0, Length, Encoding.Default);
 
             public ReadOnlySpan<byte> AsSpan() => Value is null ? default : new ReadOnlySpan<byte>(Value, Length);
 
             private string DebuggerDisplay => ToString();
         }
-        
+
         public static unsafe PCSTR CPCSTR(string value)
         {
             var buffer = Encoding.ASCII.GetBytes(value);
 
             return new PCSTR(
-                    (byte*) GCHandle.Alloc(buffer, GCHandleType.Pinned)
+                    (byte*)GCHandle.Alloc(buffer, GCHandleType.Pinned)
                     .AddrOfPinnedObject()
                 );
         }
@@ -84,17 +84,17 @@ namespace Gaussian
         [DebuggerDisplay("{Value}")]
         public readonly struct HINSTANCE : IEquatable<HINSTANCE>
         {
-            public readonly IntPtr Value;
+            public readonly nint Value;
 
-            public HINSTANCE(IntPtr value) => Value = value;
+            public HINSTANCE(nint value) => Value = value;
 
             public static HINSTANCE Null => default;
 
             public bool IsNull => Value == default;
 
-            public static implicit operator IntPtr(HINSTANCE value) => value.Value;
+            public static implicit operator nint(HINSTANCE value) => value.Value;
 
-            public static explicit operator HINSTANCE(IntPtr value) => new(value);
+            public static explicit operator HINSTANCE(nint value) => new(value);
 
             public static bool operator ==(HINSTANCE left, HINSTANCE right) => left.Value == right.Value;
 
@@ -114,17 +114,17 @@ namespace Gaussian
         [DebuggerDisplay("{Value}")]
         public readonly struct HMODULE : IEquatable<HMODULE>
         {
-            public readonly IntPtr Value;
+            public readonly nint Value;
 
-            public HMODULE(IntPtr value) => Value = value;
+            public HMODULE(nint value) => Value = value;
 
             public static HMODULE Null => default;
 
             public bool IsNull => Value == default;
 
-            public static implicit operator IntPtr(HMODULE value) => value.Value;
+            public static implicit operator nint(HMODULE value) => value.Value;
 
-            public static explicit operator HMODULE(IntPtr value) => new(value);
+            public static explicit operator HMODULE(nint value) => new(value);
 
             public static bool operator ==(HMODULE left, HMODULE right) => left.Value == right.Value;
 
@@ -143,17 +143,17 @@ namespace Gaussian
 
         public struct FARPROC
         {
-            public IntPtr Value;
+            public nint Value;
 
-            public FARPROC(IntPtr value) => Value = value;
+            public FARPROC(nint value) => Value = value;
 
             public static FARPROC Null => default;
 
             public bool IsNull => Value == default;
 
-            public static implicit operator IntPtr(FARPROC value) => value.Value;
+            public static implicit operator nint(FARPROC value) => value.Value;
 
-            public static explicit operator FARPROC(IntPtr value) => new(value);
+            public static explicit operator FARPROC(nint value) => new(value);
 
             public static bool operator ==(FARPROC left, FARPROC right) => left.Value == right.Value;
 

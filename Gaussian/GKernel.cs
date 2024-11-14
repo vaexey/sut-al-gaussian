@@ -13,7 +13,7 @@ namespace Gaussian
 
         public GKernel(int radius) 
         {
-            Kernel = new sbyte[2 * radius + 1];
+            Kernel = new sbyte[(int)Math.Pow(2 * radius + 1, 2)];
             Radius = radius;
         }
 
