@@ -11,7 +11,7 @@ namespace Gaussian
 
         private void startBtn_Click(object sender, EventArgs e)
         {
-            var proc = new Process("GaussianHLL", 50, 4, "lang.jpg", "franzl.png");
+            var proc = new Process("GaussianASM", 50, 4, "lang.jpg", "franzl.png");
 
             proc.Load();
             proc.Start();

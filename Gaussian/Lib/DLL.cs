@@ -9,9 +9,14 @@ using System.Threading.Tasks;
 
 namespace Gaussian.Lib
 {
-    public class DLL : IDisposable
+    public unsafe class DLL : IDisposable
     {
         WINAPI.HINSTANCE instance;
+
+        private delegate int d_id(sbyte* id, int idLen);
+        private d_id id;
+
+        private const int MAX_ID_LEN = 256;
 
         public DLL(string path)
         {
@@ -25,6 +30,8 @@ namespace Gaussian.Lib
                     $"LoadLibraryA on \"{path}\" returned nullptr"
                     );
             }
+
+            id = GetProc<d_id>("id");
         }
 
         public TDelegate GetProc<TDelegate>(string name) where TDelegate : Delegate
@@ -41,6 +48,25 @@ namespace Gaussian.Lib
             }
 
             return proc.CreateDelegate<TDelegate>();
+        }
+
+        public string GetId()
+        {
+            var idArray = new sbyte[MAX_ID_LEN + 1];
+            idArray[MAX_ID_LEN] = 0;
+
+            fixed (sbyte* buf = idArray)
+            {
+                id(buf, MAX_ID_LEN);
+
+                int end = 0;
+                while(end < (MAX_ID_LEN + 1) && buf[end] != 0)
+                {
+                    end++;
+                }
+
+                return new string(buf, 0, end);
+            }
         }
 
         public void Dispose()

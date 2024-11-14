@@ -1,0 +1,6 @@
+LIBRARY gauss
+
+EXPORTS id
+EXPORTS gauss_kernel
+EXPORTS gauss_kernel_size
+EXPORTS filter_uniform

@@ -61,8 +61,8 @@ namespace Gaussian.Lib
                 GetProc<d_gauss_kernel>("gauss_kernel");
             gauss_kernel_size =
                 GetProc<d_gauss_kernel_size>("gauss_kernel_size");
-            filter_24bpp_k3 =
-                GetProc<d_filter_24bpp_k3>("filter_24bpp_k3");
+            //filter_24bpp_k3 =
+            //    GetProc<d_filter_24bpp_k3>("filter_24bpp_k3");
 
             filter_uniform =
                 GetProc<d_filter_uniform>("filter_uniform");

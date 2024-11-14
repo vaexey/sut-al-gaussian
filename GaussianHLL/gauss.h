@@ -1,6 +1,11 @@
 #define DLLEXPORT __declspec(dllexport)
 //#define DEBUG
 
+int DLLEXPORT id(
+	char* id,
+	int id_len
+);
+
 void DLLEXPORT filter(
 	char* kernel,
 	int radius,

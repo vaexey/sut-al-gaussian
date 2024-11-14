@@ -56,6 +56,8 @@ namespace Gaussian.Processing
             if (source is not null)
                 throw new InvalidOperationException("Process has already been loaded");
 
+            Console.WriteLine($"Using lib '{lib.GetId()}'");
+
             //for (int i = 0; i < kernel.Kernel.Length; i++)
             //{
             //    kernel.Kernel[i] = 1;

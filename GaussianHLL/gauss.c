@@ -2,6 +2,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
+
+const char* LIB_ID = "GAUSSIAN_HLL";
+
+int id(
+	char* id,
+	int id_len
+)
+{
+	const int len = strlen(LIB_ID);
+
+	if (id_len < len)
+	{
+		return -1;
+	}
+
+	strcpy(id, LIB_ID);
+
+	return 0;
+}
 
 void filter(
 	char* kernel,
