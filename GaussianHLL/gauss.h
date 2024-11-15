@@ -46,6 +46,6 @@ void DLLEXPORT filter_uniform(
 	int startIndex,
 	int endIndex,
 	int width,
+	int height,
 	int stride
-	//bool ysafe
 );

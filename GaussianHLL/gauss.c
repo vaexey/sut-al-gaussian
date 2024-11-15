@@ -190,6 +190,7 @@ void filter_uniform(
 	int startIndex,
 	int endIndex,
 	int width,
+	int height,
 	int stride
 )
 {
@@ -207,6 +208,15 @@ void filter_uniform(
 	for (int i = 0; i < KLEN; i++)
 		kweight += kernel[i];
 
+	if ((startIndex - radius) < 0)
+	{
+		startIndex = radius;
+	}
+	if ((endIndex + radius) > height)
+	{
+		endIndex = height - 1 - radius;
+	}
+
 	int i = startIndex * stride;
 
 	for (int y = startIndex; y < endIndex; y++)
@@ -222,7 +232,7 @@ void filter_uniform(
 		int before_start = radius;
 		while (i < lim_before)
 		{
-			int kptr = i - (stride + radius * BPP);
+			int kptr = i - (radius * stride + radius * BPP);
 			int ksum = 0;
 			int kweight_subset = 0;
 
@@ -252,7 +262,7 @@ void filter_uniform(
 		}
 		while (i < lim_unsafe)
 		{
-			int kptr = i - (stride + radius * BPP);
+			int kptr = i - (radius * stride + radius * BPP);
 			int ksum = 0;
 
 			for (int ky = 0; ky < KLEN; ky += KSIZE)
@@ -271,7 +281,7 @@ void filter_uniform(
 		int after_end = KSIZE;
 		while (i < lim)
 		{
-			int kptr = i - (stride + radius * BPP);
+			int kptr = i - (radius * stride + radius * BPP);
 			int ksum = 0;
 			int kweight_subset = 0;
 

@@ -127,6 +127,12 @@
       <EnableUAC>false</EnableUAC>
       <ModuleDefinitionFile>gauss.def</ModuleDefinitionFile>
       <NoEntryPoint>true</NoEntryPoint>
+      <AdditionalOptions>kernel32.Lib 
+ucrt.lib 
+vcruntime.lib 
+msvcrt.lib 
+legacy_stdio_definitions.lib 
+legacy_stdio_wide_specifiers.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
