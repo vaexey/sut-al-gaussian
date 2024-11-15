@@ -32,7 +32,7 @@ namespace Gaussian.Processing
 
         IEnumerable<Thread> generateThreads(int count, int block)
         {
-            int blockPerThread = (int)Math.Ceiling(1.0 * block / count);
+            int blockPerThread = (int)Math.Floor(1.0 * block / count);
             int index = 0;
 
             for (int i = 0; i < count; i++)
@@ -42,7 +42,12 @@ namespace Gaussian.Processing
 
                 index += blockPerThread;
 
-                int endIndex = Math.Min(index, block);
+                int endIndex = index;
+
+                if(i == count - 1)
+                {
+                    endIndex = block - 1;
+                }
 
                 yield return new Thread(() =>
                 {
@@ -94,15 +99,15 @@ namespace Gaussian.Processing
 
         unsafe void threadSubroutine(int id, int startIndex, int endIndex)
         {
-            if(startIndex == 0)
-            {
-                startIndex = radius;
-            }
+            //if(startIndex == 0)
+            //{
+            //    startIndex = radius;
+            //}
 
-            if(endIndex == source.Height)
-            {
-                endIndex -= 2* radius;
-            }
+            //if(endIndex == source.Height)
+            //{
+            //    endIndex -= 2* radius;
+            //}
 
 
             Console.WriteLine($"Started thread #{id} with range {startIndex}::{endIndex}");
@@ -111,7 +116,8 @@ namespace Gaussian.Processing
                 throw new InvalidOperationException("Source was not loaded prior to starting");
 
             //lib.filter_24bpp_k3((byte*)kernel.Ptr(), source.Data, source.Data, startIndex, endIndex, source.Width, source.Stride);
-            lib.filter_uniform((byte*)kernel.Ptr(), radius, source.Data, dest.Data, startIndex, endIndex, source.Width, source.Stride);
+            //lib.filter_uniform((byte*)kernel.Ptr(), radius, source.Data, dest.Data, startIndex, endIndex, source.Width, source.Height, source.Stride);
+            lib.FilterUniformRaw((byte*)kernel.Ptr(), radius, source.Data, dest.Data, startIndex, endIndex, source.Width, source.Height, source.Stride);
 
             Console.WriteLine($"Thread #{id} completed");
 

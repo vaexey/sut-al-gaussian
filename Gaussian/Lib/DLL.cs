@@ -57,7 +57,10 @@ namespace Gaussian.Lib
 
             fixed (sbyte* buf = idArray)
             {
-                id(buf, MAX_ID_LEN);
+                var code = id(buf, MAX_ID_LEN);
+
+                if (code != 0)
+                    throw new InternalBufferOverflowException($"DLL id(...) could not fit ID into {MAX_ID_LEN} bytes");
 
                 int end = 0;
                 while(end < (MAX_ID_LEN + 1) && buf[end] != 0)
