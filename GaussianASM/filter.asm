@@ -1,5 +1,5 @@
 ;; Extern to print stdout
-extern __imp_wprintf:qword
+; extern __imp_wprintf:qword
 
 .const
 
@@ -28,10 +28,19 @@ BPP DQ 3
 ;;;;;;;
 filter_uniform proc
 
-;; Enter stack frame
+;; Enter stack frame with 0x80 depth
 push RBP
 mov RBP, RSP
-sub RSP, 040h
+sub RSP, 080h
+
+;; Push all nonvolatile registers (except RBP for leave instruction)
+push RBX
+push RDI
+push RSI
+push R12
+push R13
+push R14
+push R15
 
 ;; Stack variables
 ;; 0x08 - 
@@ -113,28 +122,101 @@ loop kernel_loop
 ;; Store kernel weight (sum) on stack
 mov [RBP-058h], RAX
 
-;; Store y into RCX with start value = &src + startIndex
-mov RCX, [RBP+020h]
-add RCX, [RBP+030h]
+;; Main filter loop
+;; Register purpose:
+;; RAX - general
+;; RBX - general
+;; RCX - 
+;; RDX - 
+;; RSI - srcPtr
+;; RDI - destPtr
+;; R8  - y loop index [startIndex..endIndex]
+;; R9  - x loop index [yStrideIndex..(yStrideIndex+width*BPP)]
+;; R10 - xEnd = y+width*BPP
+;; R11 - yStrideIndex
+;; R12 - 
+;; R13 - x loop src[index]
+;; R14 - x loop dest[index]
+;; R15 - stride
 
-;; Calc yEnd = (&src + endIndex * stride) and store on stack
-mov RAX, [RBP+050h]
-mov RDX, [RBP+038h]
-mul RDX
-add RAX, [RBP+020h]
-mov [RBP-060h], RAX
+;; Load src and dest pointers
+mov RSI, [RBP+020h]
+mov RDI, [RBP+028h]
 
-;; Increment y until it reaches yEnd
+;; Load stride value to register
+mov R15, [RBP+050h]
+
+;; Store y start value = startIndex
+mov R8, [RBP+030h]
+
+;; Store yStrideIndex start value = startIndex * stride
+mov RAX, R8
+mul R15
+mov R11, RAX
+
+;; for loop y=startIndex to endIndex
 y_loop:
 
-;; TODO: implement filter func
+;; Store x start value = yStrideIndex
+mov R9, R11
 
-;; Increment by stride value
-add RCX, [RBP+050h]
+;; Store xEnd value = yStrideIndex + width*BPP
+mov RAX, [RBP+040h]
+mul BPP
+add RAX, R11
+mov R10, RAX
 
-;; Go back if not reached yEnd yet
-cmp RCX, [RBP-060h]
+;; for loop x to xEnd
+x_loop:
+
+;; PIXEL
+;; Relative index: R9
+;; Relative to: RSI, RDI
+;; R13 - src[index]
+;; R14 - dest[index]
+
+;; Create offset radius*(stride+1) from index to align kernel
+mov RAX, R15
+add RAX, 1
+mul [RBP+018h]
+
+;; Subtract accumulated offset
+mov RBX, R9
+sub RBX, RAX
+
+;; Calculate ptr to first kernel value in source and store
+lea R13, [RSI+RBX]
+
+;; Calculate ptr to dest and store
+lea R14, [RDI+R9]
+
+;; END PIXEL
+
+;; Increment x by one
+inc R9
+
+;; Go back if not reached xEnd yet
+cmp R9, R10
+jne x_loop
+
+;; Increment y by one
+inc R8
+
+;; Increment yStrideIndex by stride
+add R11, R15
+
+;; Go back if not reached endIndex yet
+cmp R8, [RBP+038h]
 jne y_loop
+
+;; Pop all saved nonvolatile registers in reverse order
+pop R15
+pop R14
+pop R13
+pop R12
+pop RSI
+pop RDI
+pop RBX
 
 ;; Leave stack frame
 leave
