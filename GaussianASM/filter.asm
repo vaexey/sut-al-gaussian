@@ -8,6 +8,25 @@ MSG_BEGIN DB "filter_uniform begin",0
 ;; bytes per pixel const
 BPP DQ 3
 
+;; mask to remove 4th byte from 32-bit register
+MASK_32 DD 000FFFFFFH
+
+;; mask to remove 4th and 8th byte from 64-bit register
+MASK_64 DQ 000FFFFFF00FFFFFFH
+
+;;SKERN_0 DQ, 0010201H, 0H
+;;SKERN_1 DQ, 0020402H, 0H
+;;SKERN_2 DQ, 0010201H, 0H
+SKERN_0 DW 0001H, 0001H, 0002H, 0001H, 0001H, 0H, 0H, 0H
+SKERN_1 DW 0001H, 0001H, 0002H, 0001H, 0H, 0H, 0H, 0H
+SKERN_2 DW 0100H, 0100H, 0200H, 0100H, 0H, 0H, 0H, 0H
+
+MASK_B DQ 000FF0000FF0000FFH, 0FF0000FF0000FF00H
+MASK_G DQ 0FF0000FF0000FF00H, 00000FF0000FF0000H
+MASK_R DQ 00000FF0000FF0000H, 000FF0000FF0000FFH
+
+MASK_0 DQ 0H, 0H
+
 .code
 
 ;;;;;;;;;;;
@@ -138,6 +157,19 @@ mov [RBP-058h], RAX
 ;; R13 - x loop src[index]
 ;; R14 - x loop dest[index]
 ;; R15 - stride
+;; ------------
+;; AVX registers purpose:
+;; XMM0 - kernel row 0
+;; XMM1 - kernel row 1
+;; XMM2 - kernel row 2
+
+;; Load static kernel to XMMs
+lea RAX, SKERN_0
+movups XMM0, [RAX]
+lea RAX, SKERN_1
+movups XMM1, [RAX]
+lea RAX, SKERN_2
+movups XMM2, [RAX]
 
 ;; Load src and dest pointers
 mov RSI, [RBP+020h]
@@ -148,6 +180,11 @@ mov R15, [RBP+050h]
 
 ;; Store y start value = startIndex
 mov R8, [RBP+030h]
+
+;; Safety measure: skip dangerous y range by shrinking by radius
+mov RAX, [RBP+018h]
+add R8, RAX
+sub [RBP+038h], RAX
 
 ;; Store yStrideIndex start value = startIndex * stride
 mov RAX, R8
@@ -166,6 +203,12 @@ mul BPP
 add RAX, R11
 mov R10, RAX
 
+;; Safety measure: skip dangerous x range by shrinking by radius*BPP
+mov RAX, [RBP+018h]
+mul BPP
+add R9, RAX
+sub R10, RAX
+
 ;; for loop x to xEnd
 x_loop:
 
@@ -175,10 +218,10 @@ x_loop:
 ;; R13 - src[index]
 ;; R14 - dest[index]
 
-;; Create offset radius*(stride+1) from index to align kernel
+;; Create offset radius*(stride+BPP) from index to align kernel
 mov RAX, R15
-add RAX, 1
-mul [RBP+018h]
+add RAX, BPP
+mul qword ptr [RBP+018h]
 
 ;; Subtract accumulated offset
 mov RBX, R9
@@ -190,10 +233,55 @@ lea R13, [RSI+RBX]
 ;; Calculate ptr to dest and store
 lea R14, [RDI+R9]
 
+;; Load first row of src into two XMM registers
+movups XMM3, [R13+0]
+movups XMM4, [R13+0]
+
+;; Shift the 2nd XMM to allow PMADDUBSW to add other bytes
+psrlw XMM4, 8
+
+;; Multiply first rows of src and kernel
+;; This instruction returns only half
+;; of the passed pixels thus the second register
+pmaddubsw XMM3, XMM0
+pmaddubsw XMM4, XMM1
+
+;; Shift left 2nd XMM to make space for the 1st one
+pslld XMM4, 8
+
+;; Combine values into one register
+;; Now the values will be back in a row structure
+por XMM3, XMM4
+
+;; Unmask only B bytes
+lea RAX, MASK_B
+movups XMM4, [RAX] ;; TODO: reserve XMM reg
+pand XMM3, XMM4
+
+;; Vertically sum row for B bytes using zeroed XMM reg
+lea RAX, MASK_0
+movups XMM4, [RAX]
+psadbw XMM4, XMM3
+
+;; Load the sum into RAX
+movd RAX, XMM4
+
+;; Divide by kernel weight 
+;; (currently not variable due to development progress)
+mov RBX, 4
+div RBX
+
+;; Write B to dest
+mov byte ptr [R14+0], AL
+
+;; TODO: calculate G&R
+;; TODO: next rows
+
 ;; END PIXEL
 
 ;; Increment x by one
-inc R9
+;inc R9
+add R9, 3
 
 ;; Go back if not reached xEnd yet
 cmp R9, R10

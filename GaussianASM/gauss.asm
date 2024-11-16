@@ -71,7 +71,21 @@ gauss_kernel_size endp
 ;;;;;;
 gauss_kernel proc
 
-;; TODO: implement
+;; TODO: implement variable sizing
+
+mov byte ptr [RCX + 0], 1
+mov byte ptr [RCX + 1], 2
+mov byte ptr [RCX + 2], 1
+
+
+mov byte ptr [RCX + 3], 2
+mov byte ptr [RCX + 4], 4
+mov byte ptr [RCX + 5], 2
+
+mov byte ptr [RCX + 6], 1
+mov byte ptr [RCX + 7], 2
+mov byte ptr [RCX + 8], 1
+
 ret
 
 gauss_kernel endp

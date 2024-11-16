@@ -74,6 +74,7 @@ namespace Gaussian.Processing
 
             //kernel.Kernel[4] = 3;
             lib.gauss_kernel((byte*)kernel.Ptr(), radius);
+            kernel.Unlock();
 
             var bitmap = new Bitmap(sourcePath);
             var cloned = new Bitmap(bitmap.Width,bitmap.Height,bitmap.PixelFormat);
