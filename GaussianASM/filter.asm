@@ -8,23 +8,11 @@ MSG_BEGIN DB "filter_uniform begin",0
 ;; bytes per pixel const
 BPP DQ 3
 
-;; mask to remove 4th byte from 32-bit register
-MASK_32 DD 000FFFFFFH
+CONST_0 DQ 0,0,0,0
 
-;; mask to remove 4th and 8th byte from 64-bit register
-MASK_64 DQ 000FFFFFF00FFFFFFH
+SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 
-SKERN_02_U DW 0001H, 0001H, 0002H, 0001H, 0001H, 0H, 0H, 0H
-SKERN_02_S DW 0001H, 0001H, 0002H, 0001H, 0H, 0H, 0H, 0H
-
-SKERN_1_U DW 0002H, 0002H, 0004H, 0002H, 0002H, 0H, 0H, 0H
-SKERN_1_S DW 0002H, 0002H, 0004H, 0002H, 0H, 0H, 0H, 0H
-
-MASK_B DQ 000FF0000FF0000FFH, 0FF0000FF0000FF00H
-MASK_G DQ 0FF0000FF0000FF00H, 00000FF0000FF0000H
-MASK_R DQ 00000FF0000FF0000H, 000FF0000FF0000FFH
-
-MASK_0 DQ 0H, 0H
+KERN_R5_ROW_0 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 
 .code
 
@@ -158,28 +146,6 @@ mov [RBP-058h], RAX
 ;; R15 - stride
 ;; ------------
 ;; AVX registers purpose:
-;; XMM0 - 
-
-;; XMM6  - zeroed register
-;; XMM7  - B channel mask
-;; XMM8  - G channel mask
-;; XMM9  - R channel mask
-;; XMM10 - kernel row 0&2 unshifted
-;; XMM11 - kernel row 0&2 shifted
-;; XMM12 - kernel row 1 unshifted
-;; XMM13 - kernel row 1 shifted
-
-;; Load static masks to XMMs
-movups XMM6, xmmword ptr [MASK_0]
-movups XMM7, xmmword ptr [MASK_B]
-movups XMM8, xmmword ptr [MASK_G]
-movups XMM9, xmmword ptr [MASK_R]
-
-;; Load static kernel rows to XMMs
-movups XMM10, xmmword ptr [SKERN_02_U]
-movups XMM11, xmmword ptr [SKERN_02_S]
-movups XMM12, xmmword ptr [SKERN_1_U]
-movups XMM13, xmmword ptr [SKERN_1_S]
 
 ;; Load src and dest pointers
 mov RSI, [RBP+020h]
@@ -243,122 +209,43 @@ lea R13, [RSI+RBX]
 ;; Calculate ptr to dest and store
 lea R14, [RDI+R9]
 
-;; Load first row of src into two XMM registers
-movups XMM0, [R13+0]
-movups XMM1, [R13+0]
+;; KERNEL ROW 0
 
-;; Shift the 2nd XMM to allow PMADDUBSW to add other bytes
-psrlw XMM1, 8
+;; Load first row of src into YMM register
+vmovups YMM0, [R13+0]
 
-;; Multiply first rows of src and kernel
-;; This instruction returns only half
-;; of the passed pixels thus the second register
-pmaddubsw XMM0, XMM10
-pmaddubsw XMM1, XMM11
+;; Shuffle B bytes into words (all B bytes joined with 0x00 byte)
+vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_B]
 
-;; Shift left 2nd XMM to make space for the 1st one
-pslld XMM1, 8
+;; Multiply row by appropriate kernel row
+vpmullw YMM0, YMM0, ymmword ptr [KERN_R5_ROW_0]
 
-;; Combine values into one register
-;; Now the values will be back in a row structure
-por XMM0, XMM1
+;; Sum horizontally weighted values until all are accumulated in two qwords
+;; 1st iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+;; 2nd iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+;; 3rd iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
 
-;; Clone register to 2nd XMM
-movups XMM1, XMM0
+;; Extract lower half
+movq RBX, XMM0
 
-;; Color processing for (B,G,R)
+;; Swap xmmwords inside YMM
+vperm2f128 YMM0, YMM0, YMM0, 000000001B
 
-;; Unmask only B bytes
-pand XMM1, XMM7
+;; Extract upper half
+movq RAX, XMM0
 
-;; Vertically sum row for B bytes using zeroed XMM reg
-movups XMM2, XMM6
-psadbw XMM2, XMM1
+;; Sum both halves
+add RAX, RBX
 
-;; Load the sum into RAX
-movd RAX, XMM2
-
-;; Divide by kernel weight 
-;; (currently not variable due to development progress)
-mov RBX, 4
+;; Divide by weight
+mov RBX, 22
 div RBX
 
-;; Write B to dest
+;;mov AL, byte ptr [R13+0]
 mov byte ptr [R14+0], AL
-mov byte ptr [R14+1], AL
-mov byte ptr [R14+2], AL
-
-;; Restore reg value
-movups XMM1, XMM0
-
-;; Unmask only G bytes
-pand XMM1, XMM8
-
-;; Vertically sum row for G bytes using zeroed XMM reg
-movups XMM2, XMM6
-psadbw XMM2, XMM1
-
-;; Load the sum into RAX
-movd RAX, XMM2
-
-;; Divide by kernel weight 
-;; (currently not variable due to development progress)
-mov RBX, 4
-div RBX
-
-;; Write G to dest
-;mov byte ptr [R14+1], AL
-
-;; Restore reg value
-movups XMM1, XMM0
-
-;; Unmask only R bytes
-pand XMM1, XMM9
-
-;; Vertically sum row for R bytes using zeroed XMM reg
-movups XMM2, XMM6
-psadbw XMM2, XMM1
-
-;; Load the sum into RAX
-movd RAX, XMM2
-
-;; Divide by kernel weight 
-;; (currently not variable due to development progress)
-mov RBX, 4
-div RBX
-
-;; Write R to dest
-;mov byte ptr [R14+2], AL
-
-;; TODO: calculate G&R
-;; TODO: next rows
-
-;; Load second row of src into XMM6
-;movups XMM6, [R13+R15]
-
-;; Load third row o src into XMM7 (attention: R13 value destroyed)
-;add R13, R15
-;movups XMM7, [R13+R15]
-
-;; Multiply rows: srcRows[i]*kernel[i]
-;pmaddubsw XMM5, XMM0
-
-;; Load first pixel
-;mov EAX, [R13]
-
-;; Remove stray 4th byte
-;and EAX, MASK_32
-
-;mov [R14+0], AL
-;shr EAX, 8
-;mov [R14+1], AL
-;shr EAX, 8
-;mov [R14+2], AL
-
-;mov AL, byte ptr [R13]
-;shr AL, 1
-;mov byte ptr [R14], AL
-;mov byte ptr [RDI+R9], 128
 
 ;; END PIXEL
 
