@@ -13,8 +13,64 @@ CONST_0 DQ 0,0,0,0
 SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 
 KERN_R5_ROW_0 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+KERN_R5_ROW_1 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+KERN_R5_ROW_2 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+KERN_R5_ROW_3 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+KERN_R5_ROW_4 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
+KERN_R5_ROW_5 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 
 .code
+
+;;;;;;;;
+;; macro row_mult_5
+;;	arg0: sourceRow - source avx reg for the row
+;;  arg1: shufMask - shuffle mask for the row
+;;  arg2: kernRow - kernel row
+;;  arg3: sum - summing destination
+;;;;;;
+;; 
+;;;;;
+row_mult_5 macro sourceRow, shufMask, kernRow, sum
+
+;; KERNEL ROW
+
+;; Shuffle B bytes into words (all B bytes joined with 0x00 byte)
+vpshufb YMM0, sourceRow, ymmword ptr [shufMask]
+
+;; Multiply row by appropriate kernel row
+vpmullw YMM0, YMM0, ymmword ptr [kernRow]
+
+;; Sum horizontally weighted values until all are accumulated in two qwords
+;; 1st iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+;; 2nd iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+;; 3rd iteration of word vertical sum
+vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+
+;; Extract lower half
+movq RBX, XMM0
+
+;; Swap xmmwords inside YMM
+vperm2f128 YMM0, YMM0, YMM0, 000000001B
+
+;; Extract upper half
+movq RAX, XMM0
+
+;; Sum both halves
+add RAX, RBX
+
+;; Add to total sum
+add RAX, sum
+mov sum, RAX
+
+endm
+
+;;;;;;;
+;; macro px_col_5
+;;;;;;;
+;;
+;;;;;;
 
 ;;;;;;;;;;;
 ;; void filter_uniform(
@@ -140,12 +196,18 @@ mov [RBP-058h], RAX
 ;; R9  - x loop index [yStrideIndex..(yStrideIndex+width*BPP)]
 ;; R10 - xEnd = y+width*BPP
 ;; R11 - yStrideIndex
-;; R12 - 
+;; R12 - per pixel sum
 ;; R13 - x loop src[index]
 ;; R14 - x loop dest[index]
 ;; R15 - stride
 ;; ------------
 ;; AVX registers purpose:
+;; YMM0 - general; used by row macro
+;; YMM1 - row 0
+;; YMM2 - row 1
+;; YMM3 - row 2
+;; YMM4 - row 3
+;;     ...
 
 ;; Load src and dest pointers
 mov RSI, [RBP+020h]
@@ -161,6 +223,9 @@ mov R8, [RBP+030h]
 mov RAX, [RBP+018h]
 add R8, RAX
 sub [RBP+038h], RAX
+
+;; Safety measure #2: skip dangerous y end range
+sub qword ptr [RBP+038h], 20
 
 ;; Store yStrideIndex start value = startIndex * stride
 mov RAX, R8
@@ -209,43 +274,44 @@ lea R13, [RSI+RBX]
 ;; Calculate ptr to dest and store
 lea R14, [RDI+R9]
 
-;; KERNEL ROW 0
+;; Load 11 rows into YMM registers (1..11)
+;; Increment ptr by stride every row
+ymmIdx = 1
+rept 11
+@CatStr(<vmovups YMM>, %ymmIdx, <, [R13+0]>)
+add R13, R15
+ymmIdx = ymmIdx + 1
+endm
 
-;; Load first row of src into YMM register
-vmovups YMM0, [R13+0]
+;; Set sum register to 0
+mov R12, 0
 
-;; Shuffle B bytes into words (all B bytes joined with 0x00 byte)
-vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_B]
+;; Calculate sum for all the rows (11 times)
+row_mult_5 YMM1, SHUF_MASK_B, KERN_R5_ROW_0, R12
+row_mult_5 YMM2, SHUF_MASK_B, KERN_R5_ROW_1, R12
+row_mult_5 YMM3, SHUF_MASK_B, KERN_R5_ROW_2, R12
+row_mult_5 YMM4, SHUF_MASK_B, KERN_R5_ROW_3, R12
+row_mult_5 YMM5, SHUF_MASK_B, KERN_R5_ROW_4, R12
 
-;; Multiply row by appropriate kernel row
-vpmullw YMM0, YMM0, ymmword ptr [KERN_R5_ROW_0]
+row_mult_5 YMM6, SHUF_MASK_B, KERN_R5_ROW_5, R12
 
-;; Sum horizontally weighted values until all are accumulated in two qwords
-;; 1st iteration of word vertical sum
-vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
-;; 2nd iteration of word vertical sum
-vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
-;; 3rd iteration of word vertical sum
-vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+row_mult_5 YMM7, SHUF_MASK_B, KERN_R5_ROW_4, R12
+row_mult_5 YMM8, SHUF_MASK_B, KERN_R5_ROW_3, R12
+row_mult_5 YMM9, SHUF_MASK_B, KERN_R5_ROW_2, R12
+row_mult_5 YMM10, SHUF_MASK_B, KERN_R5_ROW_1, R12
+row_mult_5 YMM11, SHUF_MASK_B, KERN_R5_ROW_0, R12
 
-;; Extract lower half
-movq RBX, XMM0
-
-;; Swap xmmwords inside YMM
-vperm2f128 YMM0, YMM0, YMM0, 000000001B
-
-;; Extract upper half
-movq RAX, XMM0
-
-;; Sum both halves
-add RAX, RBX
+;; Store sum into RAX
+mov RAX, R12
 
 ;; Divide by weight
-mov RBX, 22
+;mov RBX, 22
+mov RBX, 242
 div RBX
 
-;;mov AL, byte ptr [R13+0]
 mov byte ptr [R14+0], AL
+mov byte ptr [R14+1], AL
+mov byte ptr [R14+2], AL
 
 ;; END PIXEL
 
