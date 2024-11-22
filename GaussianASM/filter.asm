@@ -13,6 +13,8 @@ CONST_0 DQ 0,0,0,0
 SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,16,0FFH,19,0FFH,22,0FFH,25,0FFH,28,0FFH,31,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 
+SHUF_MASK_KGEN_R5 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,6,0FFH,7,0FFH,8,0FFH,9,0FFH,10,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+
 KERN_R5_ROW_0 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 KERN_R5_ROW_1 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 KERN_R5_ROW_2 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
@@ -71,32 +73,33 @@ endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; macro ker_sum_5
-;;  arg0: shufMask
-;;  arg1: sum
+;;  arg0: shufMask - shuffle mask for the rows
+;;  arg1: kernelPtr - kernel vector table pointer
+;;  arg2: sum - summing destination
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Expands to instructions that:
 ;;  - perform row_mult_5 macro with shufMask 11 times
 ;;  - stores resulting sum into sum
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-ker_sum_5 macro shufMask, sum
+ker_sum_5 macro shufMask, kernelPtr, sum
 
 ;; Set sum register to 0
 mov R12, 0
 
 ;; Calculate sum for all the rows (11 times)
-row_mult_5 YMM1, shufMask, KERN_R5_ROW_0, sum
-row_mult_5 YMM2, shufMask, KERN_R5_ROW_1, sum
-row_mult_5 YMM3, shufMask, KERN_R5_ROW_2, sum
-row_mult_5 YMM4, shufMask, KERN_R5_ROW_3, sum
-row_mult_5 YMM5, shufMask, KERN_R5_ROW_4, sum
+row_mult_5 YMM1, shufMask, kernelPtr+0*32, sum
+row_mult_5 YMM2, shufMask, kernelPtr+1*32, sum
+row_mult_5 YMM3, shufMask, kernelPtr+2*32, sum
+row_mult_5 YMM4, shufMask, kernelPtr+3*32, sum
+row_mult_5 YMM5, shufMask, kernelPtr+4*32, sum
 
-row_mult_5 YMM6, shufMask, KERN_R5_ROW_5, sum
+row_mult_5 YMM6, shufMask, kernelPtr+5*32, sum
 
-row_mult_5 YMM7, shufMask, KERN_R5_ROW_4, sum
-row_mult_5 YMM8, shufMask, KERN_R5_ROW_3, sum
-row_mult_5 YMM9, shufMask, KERN_R5_ROW_2, sum
-row_mult_5 YMM10, shufMask, KERN_R5_ROW_1, sum
-row_mult_5 YMM11, shufMask, KERN_R5_ROW_0, sum
+row_mult_5 YMM7, shufMask, kernelPtr+4*32, sum
+row_mult_5 YMM8, shufMask, kernelPtr+3*32, sum
+row_mult_5 YMM9, shufMask, kernelPtr+2*32, sum
+row_mult_5 YMM10, shufMask, kernelPtr+1*32, sum
+row_mult_5 YMM11, shufMask, kernelPtr+0*32, sum
 
 endm
 
@@ -118,10 +121,10 @@ endm
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 filter_uniform proc
 
-;; Enter stack frame with 0x80 depth
+;; Enter stack frame with 0x200 depth
 push RBP
 mov RBP, RSP
-sub RSP, 080h
+sub RSP, 0200h
 
 ;; Push all nonvolatile registers (except RBP for leave instruction)
 push RBX
@@ -145,6 +148,12 @@ push R15
 ;; 0x50 - KLEN
 ;; 0x58 - kweight
 ;; 0x60 - yEnd
+;; 0x080 - KERNEL ROW 5 (32b)
+;; 0x0A0 - KERNEL ROW 4 (32b)
+;; 0x0C0 - KERNEL ROW 3 (32b)
+;; 0x0E0 - KERNEL ROW 2 (32b)
+;; 0x100 - KERNEL ROW 1 (32b)
+;; 0x120 - KERNEL ROW 0 (32b) - base vector KERNEL ptr
 
 ;; Args in ascending order:
 ;; RCX - kernel ptr
@@ -187,6 +196,33 @@ mul RDX
 
 ;; Store on stack
 mov [RBP-050h], RAX
+
+;; Vectorize kernel
+
+;; Load KSIZE
+mov RAX, [RBP-048h]
+
+;; Load kernel array pointer
+mov RBX, [RBP+010h]
+
+;; Iterate 6 times (rows 0-4 and middle row 5)
+kGenIdx = 0
+rept 6
+
+;; Load row (with overflow) to YMM
+vmovups YMM0, ymmword ptr [RBX]
+
+;; Shuffle first 11 values to words (dispose other data)
+vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_KGEN_R5]
+
+;; Store to kernel vector array
+vmovups ymmword ptr [RBP-0120H+kGenIdx*32], YMM0
+
+;; Increment kernel array pointer by KSIZE
+add RBX, RAX
+
+kGenIdx = kGenIdx + 1
+endm
 
 ;; Calculate weight of full matrix
 ;; Sum all matrix values to RAX
@@ -315,13 +351,13 @@ ymmIdx = ymmIdx + 1
 endm
 
 ;; Calculate kernel sum for B byte and store in R12
-ker_sum_5 SHUF_MASK_B, R12
+ker_sum_5 SHUF_MASK_B, RBP-0120H, R12
 
 ;; Store sum into RAX
 mov RAX, R12
 
 ;; Divide by weight
-mov RBX, 242
+mov RBX, [RBP-058h]
 mov RDX, 0
 div RBX
 
@@ -329,13 +365,13 @@ div RBX
 mov byte ptr [R14+0], AL
 
 ;; Calculate kernel sum for G byte and store in R12
-ker_sum_5 SHUF_MASK_G, R12
+ker_sum_5 SHUF_MASK_G, RBP-0120H, R12
 
 ;; Store sum into RAX
 mov RAX, R12
 
 ;; Divide by weight
-mov RBX, 242
+mov RBX, [RBP-058h]
 mov RDX, 0
 div RBX
 
@@ -359,13 +395,13 @@ endm
 
 ;; Calculate kernel sum for R byte and store in R12
 ;; (MASK_G since all bytes are shifted to the left)
-ker_sum_5 SHUF_MASK_G, R12
+ker_sum_5 SHUF_MASK_G, RBP-0120H, R12
 
 ;; Store sum into RAX
 mov RAX, R12
 
 ;; Divide by weight
-mov RBX, 242
+mov RBX, [RBP-058h]
 mov RDX, 0
 div RBX
 

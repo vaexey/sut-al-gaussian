@@ -18,8 +18,8 @@ namespace Gaussian.Processing
             Kernel = new sbyte[(int)Math.Pow(2 * radius + 1, 2)];
             Radius = radius;
 
-            int alignedSize = 16 * (int)Math.Ceiling(
-                Kernel.Length / 16.0
+            int alignedSize = 128 * (int)Math.Ceiling(
+                Kernel.Length / 128.0
             );
 
             extendedKernel = new sbyte[alignedSize];
