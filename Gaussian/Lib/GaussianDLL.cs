@@ -1,4 +1,5 @@
 ﻿#define DEBUG_EXTERNS_ASM
+//#define DEBUG_EXTERNS_HLL
 
 #if DEBUG_EXTERNS_ASM
 #define DEBUG_EXTERNS
@@ -6,6 +7,12 @@
 
 #if DEBUG_EXTERNS_HLL
 #define DEBUG_EXTERNS
+#endif
+
+#if DEBUG_EXTERNS_ASM
+#if DEBUG_EXTERNS_HLL
+#error GaussianDLLDebugExterns configuration is incorrect
+#endif
 #endif
 
 using System;

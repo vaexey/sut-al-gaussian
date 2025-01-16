@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,10 @@ namespace Gaussian.Processing
         Mat? source;
         Mat? dest;
         GKernel kernel = new(radius);
+
+        Bitmap? result;
+
+        Stopwatch sw = new();
 
         IEnumerable<Thread> generateThreads(int count, int block)
         {
@@ -92,7 +97,9 @@ namespace Gaussian.Processing
             if (source is null)
                 throw new InvalidOperationException("Source was not loaded prior to starting");
 
-            foreach(var thread in threads)
+            sw.Start();
+
+            foreach (var thread in threads)
             {
                 thread.Start();
             }
@@ -131,15 +138,21 @@ namespace Gaussian.Processing
 
             if(done.Count >= threadCount)
             {
+                sw.Stop();
+
                 Console.WriteLine("Finished processing");
 
                 source.Dispose();
                 dest.Dispose();
 
-                var bmp = dest.Source;
+                var temp = dest.Source;
 
-                bmp.Save(destPath);
-                bmp.Dispose();
+                source = null;
+                dest = null;
+
+                temp.Save(destPath);
+
+                result = temp;
             }
         }
 
@@ -147,11 +160,32 @@ namespace Gaussian.Processing
         {
             lib.Dispose();
 
-            if(source is not null)
+            if (source is not null)
             {
                 source.Dispose();
                 source.Source.Dispose();
             }
+
+            if (result is not null)
+            {
+                result.Dispose();
+            }
+
+        }
+
+        public Bitmap? GetSource()
+        {
+            return source?.Source;
+        }
+
+        public Bitmap? GetResult()
+        {
+            return result;
+        }
+
+        public double GetElapsed()
+        {
+            return sw.Elapsed.TotalMilliseconds;
         }
     }
 }

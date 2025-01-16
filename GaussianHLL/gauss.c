@@ -232,24 +232,24 @@ void filter_uniform(
 		int before_start = radius;
 		while (i < lim_before)
 		{
-			int kptr = i - (radius * stride + radius * BPP);
-			int ksum = 0;
-			int kweight_subset = 0;
+			//int kptr = i - (radius * stride + radius * BPP);
+			//int ksum = 0;
+			//int kweight_subset = 0;
 
-			for (int ky = 0; ky < KLEN; ky += KSIZE)
-			{
-				for (int k = before_start; k < KSIZE; k++)
-				{
-					int w = kernel[ky + k];
+			//for (int ky = 0; ky < KLEN; ky += KSIZE)
+			//{
+			//	for (int k = before_start; k < KSIZE; k++)
+			//	{
+			//		int w = kernel[ky + k];
 
-					ksum += w * src[kptr + k * BPP];
-					kweight_subset += w;
-				}
+			//		ksum += w * src[kptr + k * BPP];
+			//		kweight_subset += w;
+			//	}
 
-				kptr += stride;
-			}
+			//	kptr += stride;
+			//}
 
-			dest[i] = ksum / kweight_subset;
+			//dest[i] = ksum / kweight_subset;
 
 			i += 1;
 			before_counter++;
@@ -277,38 +277,38 @@ void filter_uniform(
 
 			i += 1;
 		}
-		int after_counter = 0;
-		int after_end = KSIZE;
-		while (i < lim)
-		{
-			int kptr = i - (radius * stride + radius * BPP);
-			int ksum = 0;
-			int kweight_subset = 0;
+		//int after_counter = 0;
+		//int after_end = KSIZE;
+		//while (i < lim)
+		//{
+		//	int kptr = i - (radius * stride + radius * BPP);
+		//	int ksum = 0;
+		//	int kweight_subset = 0;
 
-			for (int ky = 0; ky < KLEN; ky += KSIZE)
-			{
-				for (int k = 0; k < after_end; k++)
-				{
-					int w = kernel[ky + k];
+		//	for (int ky = 0; ky < KLEN; ky += KSIZE)
+		//	{
+		//		for (int k = 0; k < after_end; k++)
+		//		{
+		//			int w = kernel[ky + k];
 
-					ksum += w * src[kptr + k * BPP];
-					kweight_subset += w;
-				}
+		//			ksum += w * src[kptr + k * BPP];
+		//			kweight_subset += w;
+		//		}
 
-				kptr += stride;
-			}
+		//		kptr += stride;
+		//	}
 
-			dest[i] = ksum / kweight_subset;
+		//	dest[i] = ksum / kweight_subset;
 
-			i += 1;
-			after_counter++;
+		//	i += 1;
+		//	after_counter++;
 
-			if (after_counter == BPP)
-			{
-				after_counter = 0;
-				after_end -= 1;
-			}
-		}
+		//	if (after_counter == BPP)
+		//	{
+		//		after_counter = 0;
+		//		after_end -= 1;
+		//	}
+		//}
 
 		i = next;
 	}

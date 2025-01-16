@@ -28,7 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            listView = new ListView();
+            components = new System.ComponentModel.Container();
+            historyList = new ListView();
             pictureBefore = new PictureBox();
             pictureAfter = new PictureBox();
             pictureSplitContainer = new SplitContainer();
@@ -37,29 +38,30 @@
             groupBox3 = new GroupBox();
             startBtn = new Button();
             label11 = new Label();
-            button2 = new Button();
-            textBox2 = new TextBox();
+            destBtn = new Button();
+            destBox = new TextBox();
             label10 = new Label();
-            button1 = new Button();
-            textBox1 = new TextBox();
+            sourceBtn = new Button();
+            sourceBox = new TextBox();
             groupBox2 = new GroupBox();
             label3 = new Label();
             label9 = new Label();
-            label8 = new Label();
-            label7 = new Label();
+            threadsLabel = new Label();
+            logicalCpuLabel = new Label();
             label6 = new Label();
             label5 = new Label();
             label4 = new Label();
-            trackBar1 = new TrackBar();
+            threadsTrack = new TrackBar();
             groupBox1 = new GroupBox();
-            label2 = new Label();
-            numericUpDown1 = new NumericUpDown();
-            comboBox1 = new ComboBox();
+            algorithmCombo = new ComboBox();
             label1 = new Label();
             tabPageView = new TabPage();
             histSplitContainer = new SplitContainer();
             histBefore = new PictureBox();
             histAfter = new PictureBox();
+            tabPageAbout = new TabPage();
+            label2 = new Label();
+            mainTimer = new System.Windows.Forms.Timer(components);
             ((System.ComponentModel.ISupportInitialize)pictureBefore).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureAfter).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureSplitContainer).BeginInit();
@@ -70,9 +72,8 @@
             tabPageSet.SuspendLayout();
             groupBox3.SuspendLayout();
             groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)threadsTrack).BeginInit();
             groupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             tabPageView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)histSplitContainer).BeginInit();
             histSplitContainer.Panel1.SuspendLayout();
@@ -80,22 +81,25 @@
             histSplitContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)histBefore).BeginInit();
             ((System.ComponentModel.ISupportInitialize)histAfter).BeginInit();
+            tabPageAbout.SuspendLayout();
             SuspendLayout();
             // 
-            // listView
+            // historyList
             // 
-            listView.Location = new Point(0, 0);
-            listView.Name = "listView";
-            listView.Size = new Size(268, 530);
-            listView.TabIndex = 0;
-            listView.UseCompatibleStateImageBehavior = false;
+            historyList.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            historyList.Location = new Point(0, 0);
+            historyList.Name = "historyList";
+            historyList.Size = new Size(367, 574);
+            historyList.TabIndex = 0;
+            historyList.UseCompatibleStateImageBehavior = false;
             // 
             // pictureBefore
             // 
             pictureBefore.Dock = DockStyle.Fill;
             pictureBefore.Location = new Point(0, 0);
             pictureBefore.Name = "pictureBefore";
-            pictureBefore.Size = new Size(309, 376);
+            pictureBefore.Size = new Size(397, 420);
+            pictureBefore.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBefore.TabIndex = 1;
             pictureBefore.TabStop = false;
             // 
@@ -104,7 +108,8 @@
             pictureAfter.Dock = DockStyle.Fill;
             pictureAfter.Location = new Point(0, 0);
             pictureAfter.Name = "pictureAfter";
-            pictureAfter.Size = new Size(308, 376);
+            pictureAfter.Size = new Size(382, 420);
+            pictureAfter.SizeMode = PictureBoxSizeMode.Zoom;
             pictureAfter.TabIndex = 2;
             pictureAfter.TabStop = false;
             // 
@@ -121,8 +126,8 @@
             // pictureSplitContainer.Panel2
             // 
             pictureSplitContainer.Panel2.Controls.Add(pictureAfter);
-            pictureSplitContainer.Size = new Size(621, 376);
-            pictureSplitContainer.SplitterDistance = 309;
+            pictureSplitContainer.Size = new Size(783, 420);
+            pictureSplitContainer.SplitterDistance = 397;
             pictureSplitContainer.TabIndex = 3;
             // 
             // tabControl1
@@ -130,10 +135,11 @@
             tabControl1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             tabControl1.Controls.Add(tabPageSet);
             tabControl1.Controls.Add(tabPageView);
-            tabControl1.Location = new Point(274, 0);
+            tabControl1.Controls.Add(tabPageAbout);
+            tabControl1.Location = new Point(373, 0);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new Size(641, 530);
+            tabControl1.Size = new Size(803, 574);
             tabControl1.TabIndex = 4;
             // 
             // tabPageSet
@@ -144,7 +150,7 @@
             tabPageSet.Location = new Point(4, 24);
             tabPageSet.Name = "tabPageSet";
             tabPageSet.Padding = new Padding(3);
-            tabPageSet.Size = new Size(633, 502);
+            tabPageSet.Size = new Size(795, 546);
             tabPageSet.TabIndex = 1;
             tabPageSet.Text = "Settings";
             tabPageSet.UseVisualStyleBackColor = true;
@@ -154,14 +160,14 @@
             groupBox3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBox3.Controls.Add(startBtn);
             groupBox3.Controls.Add(label11);
-            groupBox3.Controls.Add(button2);
-            groupBox3.Controls.Add(textBox2);
+            groupBox3.Controls.Add(destBtn);
+            groupBox3.Controls.Add(destBox);
             groupBox3.Controls.Add(label10);
-            groupBox3.Controls.Add(button1);
-            groupBox3.Controls.Add(textBox1);
-            groupBox3.Location = new Point(6, 266);
+            groupBox3.Controls.Add(sourceBtn);
+            groupBox3.Controls.Add(sourceBox);
+            groupBox3.Location = new Point(6, 228);
             groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(621, 114);
+            groupBox3.Size = new Size(783, 114);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "Process";
@@ -169,7 +175,7 @@
             // startBtn
             // 
             startBtn.Anchor = AnchorStyles.Top;
-            startBtn.Location = new Point(274, 80);
+            startBtn.Location = new Point(355, 80);
             startBtn.Name = "startBtn";
             startBtn.Size = new Size(75, 23);
             startBtn.TabIndex = 11;
@@ -186,23 +192,24 @@
             label11.TabIndex = 10;
             label11.Text = "Destination folder:";
             // 
-            // button2
+            // destBtn
             // 
-            button2.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            button2.Location = new Point(540, 51);
-            button2.Name = "button2";
-            button2.Size = new Size(75, 23);
-            button2.TabIndex = 9;
-            button2.Text = "Browse...";
-            button2.UseVisualStyleBackColor = true;
+            destBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            destBtn.Location = new Point(702, 51);
+            destBtn.Name = "destBtn";
+            destBtn.Size = new Size(75, 23);
+            destBtn.TabIndex = 9;
+            destBtn.Text = "Browse...";
+            destBtn.UseVisualStyleBackColor = true;
+            destBtn.Click += destBtn_Click;
             // 
-            // textBox2
+            // destBox
             // 
-            textBox2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBox2.Location = new Point(136, 51);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(398, 23);
-            textBox2.TabIndex = 8;
+            destBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            destBox.Location = new Point(136, 51);
+            destBox.Name = "destBox";
+            destBox.Size = new Size(560, 23);
+            destBox.TabIndex = 8;
             // 
             // label10
             // 
@@ -213,38 +220,39 @@
             label10.TabIndex = 7;
             label10.Text = "Source file:";
             // 
-            // button1
+            // sourceBtn
             // 
-            button1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            button1.Location = new Point(540, 22);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 23);
-            button1.TabIndex = 1;
-            button1.Text = "Browse...";
-            button1.UseVisualStyleBackColor = true;
+            sourceBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            sourceBtn.Location = new Point(702, 22);
+            sourceBtn.Name = "sourceBtn";
+            sourceBtn.Size = new Size(75, 23);
+            sourceBtn.TabIndex = 1;
+            sourceBtn.Text = "Browse...";
+            sourceBtn.UseVisualStyleBackColor = true;
+            sourceBtn.Click += sourceBtn_Click;
             // 
-            // textBox1
+            // sourceBox
             // 
-            textBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBox1.Location = new Point(136, 22);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(398, 23);
-            textBox1.TabIndex = 0;
+            sourceBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            sourceBox.Location = new Point(136, 22);
+            sourceBox.Name = "sourceBox";
+            sourceBox.Size = new Size(560, 23);
+            sourceBox.TabIndex = 0;
             // 
             // groupBox2
             // 
             groupBox2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBox2.Controls.Add(label3);
             groupBox2.Controls.Add(label9);
-            groupBox2.Controls.Add(label8);
-            groupBox2.Controls.Add(label7);
+            groupBox2.Controls.Add(threadsLabel);
+            groupBox2.Controls.Add(logicalCpuLabel);
             groupBox2.Controls.Add(label6);
             groupBox2.Controls.Add(label5);
             groupBox2.Controls.Add(label4);
-            groupBox2.Controls.Add(trackBar1);
-            groupBox2.Location = new Point(6, 120);
+            groupBox2.Controls.Add(threadsTrack);
+            groupBox2.Location = new Point(6, 82);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(621, 140);
+            groupBox2.Size = new Size(783, 140);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "Threading";
@@ -262,37 +270,37 @@
             // 
             label9.Anchor = AnchorStyles.Top;
             label9.AutoSize = true;
-            label9.Location = new Point(285, 114);
+            label9.Location = new Point(366, 114);
             label9.Name = "label9";
             label9.Size = new Size(48, 15);
             label9.TabIndex = 7;
             label9.Text = "Threads";
             // 
-            // label8
+            // threadsLabel
             // 
-            label8.Anchor = AnchorStyles.Top;
-            label8.AutoSize = true;
-            label8.Location = new Point(357, 55);
-            label8.Name = "label8";
-            label8.Size = new Size(19, 15);
-            label8.TabIndex = 6;
-            label8.Text = "64";
+            threadsLabel.Anchor = AnchorStyles.Top;
+            threadsLabel.AutoSize = true;
+            threadsLabel.Location = new Point(438, 55);
+            threadsLabel.Name = "threadsLabel";
+            threadsLabel.Size = new Size(19, 15);
+            threadsLabel.TabIndex = 6;
+            threadsLabel.Text = "64";
             // 
-            // label7
+            // logicalCpuLabel
             // 
-            label7.Anchor = AnchorStyles.Top;
-            label7.AutoSize = true;
-            label7.Location = new Point(357, 31);
-            label7.Name = "label7";
-            label7.Size = new Size(19, 15);
-            label7.TabIndex = 5;
-            label7.Text = "64";
+            logicalCpuLabel.Anchor = AnchorStyles.Top;
+            logicalCpuLabel.AutoSize = true;
+            logicalCpuLabel.Location = new Point(438, 31);
+            logicalCpuLabel.Name = "logicalCpuLabel";
+            logicalCpuLabel.Size = new Size(19, 15);
+            logicalCpuLabel.TabIndex = 5;
+            logicalCpuLabel.Text = "64";
             // 
             // label6
             // 
             label6.Anchor = AnchorStyles.Top;
             label6.AutoSize = true;
-            label6.Location = new Point(226, 55);
+            label6.Location = new Point(307, 55);
             label6.Name = "label6";
             label6.Size = new Size(125, 15);
             label6.TabIndex = 4;
@@ -302,7 +310,7 @@
             // 
             label5.Anchor = AnchorStyles.Top;
             label5.AutoSize = true;
-            label5.Location = new Point(243, 31);
+            label5.Location = new Point(324, 31);
             label5.Name = "label5";
             label5.Size = new Size(108, 15);
             label5.TabIndex = 3;
@@ -312,78 +320,57 @@
             // 
             label4.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             label4.AutoSize = true;
-            label4.Location = new Point(592, 114);
+            label4.Location = new Point(754, 114);
             label4.Name = "label4";
             label4.Size = new Size(19, 15);
             label4.TabIndex = 2;
             label4.Text = "64";
             // 
-            // trackBar1
+            // threadsTrack
             // 
-            trackBar1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            trackBar1.BackColor = SystemColors.Window;
-            trackBar1.Location = new Point(6, 84);
-            trackBar1.Maximum = 64;
-            trackBar1.Minimum = 1;
-            trackBar1.Name = "trackBar1";
-            trackBar1.Size = new Size(609, 45);
-            trackBar1.TabIndex = 1;
-            trackBar1.Value = 1;
+            threadsTrack.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            threadsTrack.BackColor = SystemColors.Window;
+            threadsTrack.Location = new Point(6, 84);
+            threadsTrack.Maximum = 64;
+            threadsTrack.Minimum = 1;
+            threadsTrack.Name = "threadsTrack";
+            threadsTrack.Size = new Size(771, 45);
+            threadsTrack.TabIndex = 1;
+            threadsTrack.Value = 1;
+            threadsTrack.ValueChanged += threadsTrack_ValueChanged;
             // 
             // groupBox1
             // 
             groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            groupBox1.Controls.Add(label2);
-            groupBox1.Controls.Add(numericUpDown1);
-            groupBox1.Controls.Add(comboBox1);
+            groupBox1.Controls.Add(algorithmCombo);
             groupBox1.Controls.Add(label1);
             groupBox1.Location = new Point(6, 6);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(621, 108);
+            groupBox1.Size = new Size(783, 70);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "Gaussian blur";
             // 
-            // label2
+            // algorithmCombo
             // 
-            label2.Anchor = AnchorStyles.Top;
-            label2.AutoSize = true;
-            label2.Location = new Point(194, 65);
-            label2.Name = "label2";
-            label2.Size = new Size(75, 15);
-            label2.TabIndex = 3;
-            label2.Text = "Kernel radius";
-            // 
-            // numericUpDown1
-            // 
-            numericUpDown1.Anchor = AnchorStyles.Top;
-            numericUpDown1.Location = new Point(274, 63);
-            numericUpDown1.Maximum = new decimal(new int[] { 5, 0, 0, 0 });
-            numericUpDown1.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(122, 23);
-            numericUpDown1.TabIndex = 2;
-            numericUpDown1.Value = new decimal(new int[] { 1, 0, 0, 0 });
-            // 
-            // comboBox1
-            // 
-            comboBox1.Anchor = AnchorStyles.Top;
-            comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(275, 34);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(121, 23);
-            comboBox1.TabIndex = 1;
+            algorithmCombo.Anchor = AnchorStyles.Top;
+            algorithmCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            algorithmCombo.FormattingEnabled = true;
+            algorithmCombo.Items.AddRange(new object[] { "GaussianHLL", "GaussianASM" });
+            algorithmCombo.Location = new Point(356, 34);
+            algorithmCombo.Name = "algorithmCombo";
+            algorithmCombo.Size = new Size(121, 23);
+            algorithmCombo.TabIndex = 1;
             // 
             // label1
             // 
             label1.Anchor = AnchorStyles.Top;
             label1.AutoSize = true;
-            label1.Location = new Point(208, 37);
+            label1.Location = new Point(289, 37);
             label1.Name = "label1";
-            label1.Size = new Size(61, 15);
+            label1.Size = new Size(64, 15);
             label1.TabIndex = 0;
-            label1.Text = "Algorithm";
+            label1.Text = "Algorithm:";
             // 
             // tabPageView
             // 
@@ -392,7 +379,7 @@
             tabPageView.Location = new Point(4, 24);
             tabPageView.Name = "tabPageView";
             tabPageView.Padding = new Padding(3);
-            tabPageView.Size = new Size(633, 502);
+            tabPageView.Size = new Size(795, 546);
             tabPageView.TabIndex = 0;
             tabPageView.Text = "View";
             tabPageView.UseVisualStyleBackColor = true;
@@ -400,7 +387,7 @@
             // histSplitContainer
             // 
             histSplitContainer.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            histSplitContainer.Location = new Point(6, 388);
+            histSplitContainer.Location = new Point(6, 432);
             histSplitContainer.Name = "histSplitContainer";
             // 
             // histSplitContainer.Panel1
@@ -410,8 +397,8 @@
             // histSplitContainer.Panel2
             // 
             histSplitContainer.Panel2.Controls.Add(histAfter);
-            histSplitContainer.Size = new Size(621, 106);
-            histSplitContainer.SplitterDistance = 309;
+            histSplitContainer.Size = new Size(783, 106);
+            histSplitContainer.SplitterDistance = 397;
             histSplitContainer.TabIndex = 5;
             // 
             // histBefore
@@ -419,7 +406,7 @@
             histBefore.Dock = DockStyle.Fill;
             histBefore.Location = new Point(0, 0);
             histBefore.Name = "histBefore";
-            histBefore.Size = new Size(309, 106);
+            histBefore.Size = new Size(397, 106);
             histBefore.TabIndex = 1;
             histBefore.TabStop = false;
             // 
@@ -428,19 +415,46 @@
             histAfter.Dock = DockStyle.Fill;
             histAfter.Location = new Point(0, 0);
             histAfter.Name = "histAfter";
-            histAfter.Size = new Size(308, 106);
+            histAfter.Size = new Size(382, 106);
             histAfter.TabIndex = 2;
             histAfter.TabStop = false;
+            // 
+            // tabPageAbout
+            // 
+            tabPageAbout.Controls.Add(label2);
+            tabPageAbout.Location = new Point(4, 24);
+            tabPageAbout.Name = "tabPageAbout";
+            tabPageAbout.Size = new Size(795, 546);
+            tabPageAbout.TabIndex = 2;
+            tabPageAbout.Text = "About";
+            tabPageAbout.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            label2.Dock = DockStyle.Fill;
+            label2.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            label2.Location = new Point(0, 0);
+            label2.Name = "label2";
+            label2.Size = new Size(795, 546);
+            label2.TabIndex = 0;
+            label2.Text = "Gaussian UI\r\n(c) 2024";
+            label2.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // mainTimer
+            // 
+            mainTimer.Enabled = true;
+            mainTimer.Tick += mainTimer_Tick;
             // 
             // GaussianUI
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(927, 530);
+            ClientSize = new Size(1188, 574);
             Controls.Add(tabControl1);
-            Controls.Add(listView);
+            Controls.Add(historyList);
             Name = "GaussianUI";
             Text = "Gaussian";
+            Load += GaussianUI_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBefore).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureAfter).EndInit();
             pictureSplitContainer.Panel1.ResumeLayout(false);
@@ -453,10 +467,9 @@
             groupBox3.PerformLayout();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBar1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)threadsTrack).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             tabPageView.ResumeLayout(false);
             histSplitContainer.Panel1.ResumeLayout(false);
             histSplitContainer.Panel2.ResumeLayout(false);
@@ -464,12 +477,13 @@
             histSplitContainer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)histBefore).EndInit();
             ((System.ComponentModel.ISupportInitialize)histAfter).EndInit();
+            tabPageAbout.ResumeLayout(false);
             ResumeLayout(false);
         }
 
         #endregion
 
-        private ListView listView;
+        private ListView historyList;
         private PictureBox pictureBefore;
         private PictureBox pictureAfter;
         private SplitContainer pictureSplitContainer;
@@ -480,15 +494,13 @@
         private PictureBox histBefore;
         private PictureBox histAfter;
         private GroupBox groupBox2;
-        private TrackBar trackBar1;
+        private TrackBar threadsTrack;
         private Label label3;
         private GroupBox groupBox1;
-        private Label label2;
-        private NumericUpDown numericUpDown1;
-        private ComboBox comboBox1;
+        private ComboBox algorithmCombo;
         private Label label1;
-        private Label label8;
-        private Label label7;
+        private Label threadsLabel;
+        private Label logicalCpuLabel;
         private Label label6;
         private Label label5;
         private Label label4;
@@ -496,10 +508,13 @@
         private GroupBox groupBox3;
         private Button startBtn;
         private Label label11;
-        private Button button2;
-        private TextBox textBox2;
+        private Button destBtn;
+        private TextBox destBox;
         private Label label10;
-        private Button button1;
-        private TextBox textBox1;
+        private Button sourceBtn;
+        private TextBox sourceBox;
+        private TabPage tabPageAbout;
+        private Label label2;
+        private System.Windows.Forms.Timer mainTimer;
     }
 }

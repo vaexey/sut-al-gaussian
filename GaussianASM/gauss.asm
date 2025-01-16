@@ -3,6 +3,18 @@
 LIB_ID DB "GAUSSIAN_ASM",0
 LIB_ID_LEN DQ 13
 
+GKERNEL_QUALITY DB 3,4,5,6,7,7,7,6,5,4,3
+DB 4,6,7,9,10,11,10,9,7,6,4
+DB 5,7,10,12,13,14,13,12,10,7,5
+DB 6,9,12,14,16,17,16,14,12,9,6
+DB 7,10,13,16,18,19,18,16,13,10,7
+DB 7,11,14,17,19,20,19,17,14,11,7
+DB 7,10,13,16,18,19,18,16,13,10,7
+DB 6,9,12,14,16,17,16,14,12,9,6
+DB 5,7,10,12,13,14,13,12,10,7,5
+DB 4,6,7,9,10,11,10,9,7,6,4
+DB 3,4,5,6,7,7,7,6,5,4,3
+
 .code
 
 ;;;;;;;;;;;;;;
@@ -22,6 +34,10 @@ ret
 ;; If LIB_ID fits in specified array:
 id_ok:
 
+;; Save nonvolatile registers
+push RSI
+push RDI
+
 ;; Load src index
 lea RSI, LIB_ID
 
@@ -34,6 +50,11 @@ rep movsb
 
 ;; Return 0
 mov RAX, 0
+
+;; Restore nonvolatile registers
+pop RDI
+pop RSI
+
 ret
 
 
@@ -73,18 +94,25 @@ gauss_kernel proc
 
 ;; TODO: implement variable sizing
 
-mov byte ptr [RCX + 0], 1
-mov byte ptr [RCX + 1], 2
-mov byte ptr [RCX + 2], 1
+;; Save nonvolatile registers
+push RSI
+push RDI
 
+;; Clone static hardcoded kernel into array
 
-mov byte ptr [RCX + 3], 2
-mov byte ptr [RCX + 4], 4
-mov byte ptr [RCX + 5], 2
+;; Load src index
+lea RSI, GKERNEL_QUALITY
 
-mov byte ptr [RCX + 6], 1
-mov byte ptr [RCX + 7], 2
-mov byte ptr [RCX + 8], 1
+;; Load dest index
+mov RDI, RCX
+
+;; Repeat movsb LIB_ID_LEN times
+mov RCX, 121
+rep movsb
+
+;; Restore nonvolatile registers
+pop RDI
+pop RSI
 
 ret
 

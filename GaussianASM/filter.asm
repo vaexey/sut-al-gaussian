@@ -10,10 +10,17 @@ BPP DQ 3
 
 CONST_0 DQ 0,0,0,0
 
-SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
-SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,16,0FFH,19,0FFH,22,0FFH,25,0FFH,28,0FFH,31,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+;SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+;SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,16,0FFH,19,0FFH,22,0FFH,25,0FFH,28,0FFH,31,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 
-SHUF_MASK_KGEN_R5 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,6,0FFH,7,0FFH,8,0FFH,9,0FFH,10,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,0FFH,0FFH,0FFH,0FFH, 0FFH,0FFH,2,0FFH,5,0FFH,8,0FFH,11,0FFH,14,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH, 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,0FFH,0FFH,0FFH,0FFH
+
+;SHUF_MASK_KGEN_R5_1 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,6,0FFH,7,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+;SHUF_MASK_KGEN_R5_2 DB 0,0FFH,1,0FFH,2,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
+
+SHUF_MASK_KGEN_R5_1 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
+SHUF_MASK_KGEN_R5_2 DB 5,0FFH,6,0FFH,7,0FFH,8,0FFH,9,0FFH,10,0FFH,0FFH,0FFH,0FFH,0FFH,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 
 KERN_R5_ROW_0 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 KERN_R5_ROW_1 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
@@ -41,9 +48,14 @@ row_mult_5 macro sourceRow, shufMask, kernRow, sum
 
 ;; Shuffle B bytes into words (all B bytes joined with 0x00 byte)
 vpshufb YMM0, sourceRow, ymmword ptr [shufMask]
+;vmovups YMM1, ymmword ptr [shufMask]
+;vmovups YMM2, sourceRow
+;vmovups YMM3, YMM0
 
 ;; Multiply row by appropriate kernel row
 vpmullw YMM0, YMM0, ymmword ptr [kernRow]
+;vmovups YMM4, ymmword ptr [kernRow]
+;vmovups YMM5, YMM0
 
 ;; Sum horizontally weighted values until all are accumulated in two qwords
 ;; 1st iteration of word vertical sum
@@ -52,6 +64,7 @@ vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
 vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
 ;; 3rd iteration of word vertical sum
 vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
+;vmovups YMM7, YMM0
 
 ;; Extract lower half
 movq RBX, XMM0
@@ -212,8 +225,20 @@ rept 6
 ;; Load row (with overflow) to YMM
 vmovups YMM0, ymmword ptr [RBX]
 
-;; Shuffle first 11 values to words (dispose other data)
-vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_KGEN_R5]
+;; Shuffle first 6 values to words (dispose other data)
+vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_KGEN_R5_1]
+
+;; Rotate 128b xmm words to allow lower lane insertion
+vperm2f128 YMM0, YMM0, YMM0, 000000001B
+
+;; Load row (with overflow) to XMM (not YMM)
+movups XMM0, xmmword ptr [RBX]
+
+;; Shuffle remaining values 6-10 (double 6) to words (dispose next kernel values and keep upper 128xmmword)
+vpshufb YMM0, YMM0, ymmword ptr [SHUF_MASK_KGEN_R5_2]
+
+;; Rotate 128b xmm words to restore original order
+vperm2f128 YMM0, YMM0, YMM0, 000000001B
 
 ;; Store to kernel vector array
 vmovups ymmword ptr [RBP-0120H+kGenIdx*32], YMM0
@@ -272,6 +297,7 @@ mov [RBP-058h], RAX
 ;; YMM3 - row 2
 ;; YMM4 - row 3
 ;;     ...
+;; YMM11- row 10
 
 ;; Load src and dest pointers
 mov RSI, [RBP+020h]
@@ -289,7 +315,7 @@ add R8, RAX
 sub [RBP+038h], RAX
 
 ;; Safety measure #2: skip dangerous y end range
-sub qword ptr [RBP+038h], 20
+;sub qword ptr [RBP+038h], 20
 
 ;; Store yStrideIndex start value = startIndex * stride
 mov RAX, R8
