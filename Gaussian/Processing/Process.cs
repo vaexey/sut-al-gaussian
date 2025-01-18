@@ -37,8 +37,13 @@ namespace Gaussian.Processing
 
         IEnumerable<Thread> generateThreads(int count, int block)
         {
-            int blockPerThread = (int)Math.Floor(1.0 * block / count);
             int index = 0;
+
+            // Remove dangerous Y regions from distribution
+            index += radius;
+            block -= radius;
+
+            int blockPerThread = (int)Math.Floor(1.0 * block / count);
 
             for (int i = 0; i < count; i++)
             {
@@ -67,22 +72,15 @@ namespace Gaussian.Processing
                 throw new InvalidOperationException("Process has already been loaded");
 
             Console.WriteLine($"Using lib '{lib.GetId()}'");
-
-            //for (int i = 0; i < kernel.Kernel.Length; i++)
-            //{
-            //    kernel.Kernel[i] = 1;
-            //}
-            //kernel.Kernel[1] = 2;
-            //kernel.Kernel[3] = 2;
-            //kernel.Kernel[5] = 2;
-            //kernel.Kernel[7] = 2;
-
-            //kernel.Kernel[4] = 3;
-            lib.gauss_kernel((byte*)kernel.Ptr(), radius);
-            kernel.Unlock();
+            lib.GaussKernel(kernel);
 
             var bitmap = new Bitmap(sourcePath);
             var cloned = new Bitmap(bitmap.Width,bitmap.Height,bitmap.PixelFormat);
+
+            if((bitmap.Height - 2*radius) <= threadCount)
+            {
+                throw new InvalidOperationException("Image is too small for this operation. Select a bigger image or decrease the thread count.");
+            }
 
             source = new Mat(bitmap);
             dest = new Mat(cloned);
@@ -107,24 +105,11 @@ namespace Gaussian.Processing
 
         unsafe void threadSubroutine(int id, int startIndex, int endIndex)
         {
-            //if(startIndex == 0)
-            //{
-            //    startIndex = radius;
-            //}
-
-            //if(endIndex == source.Height)
-            //{
-            //    endIndex -= 2* radius;
-            //}
-
-
             Console.WriteLine($"Started thread #{id} with range {startIndex}::{endIndex}");
 
             if (source is null)
                 throw new InvalidOperationException("Source was not loaded prior to starting");
 
-            //lib.filter_24bpp_k3((byte*)kernel.Ptr(), source.Data, source.Data, startIndex, endIndex, source.Width, source.Stride);
-            //lib.filter_uniform((byte*)kernel.Ptr(), radius, source.Data, dest.Data, startIndex, endIndex, source.Width, source.Height, source.Stride);
             lib.FilterUniformRaw((byte*)kernel.Ptr(), radius, source.Data, dest.Data, startIndex, endIndex, source.Width, source.Height, source.Stride);
 
             Console.WriteLine($"Thread #{id} completed");
@@ -164,6 +149,12 @@ namespace Gaussian.Processing
             {
                 source.Dispose();
                 source.Source.Dispose();
+            }
+
+            if(dest is not null)
+            {
+                dest.Dispose();
+                dest.Source.Dispose();
             }
 
             if (result is not null)

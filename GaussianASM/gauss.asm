@@ -17,11 +17,11 @@ DB 3,4,5,6,7,7,7,6,5,4,3
 
 .code
 
-;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; uint64_t id(uint8_t* dest, uint64_t maxLen)
-;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Stores library ID into dest array of size maxLen
-;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 id proc
 
 ;; Verify whether dest* [maxLen] is big enough to put LIB_ID
@@ -57,18 +57,13 @@ pop RSI
 
 ret
 
-
-;;add RCX, RDX
-;;mov RAX, RCX
-;;ret
-
 id endp
 
-;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; uint64_t gauss_kernel_size(uint64_t radius)
-;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Returns size of gauss kernel based on specified radius
-;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 gauss_kernel_size proc
 
 ;; Store radius in RAX
@@ -84,15 +79,13 @@ ret
 
 gauss_kernel_size endp
 
-;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; void gauss_kernel (uint8_t* kernel, int radius)
-;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Creates kernel values for a given kernel array of
 ;; size determined by radius
-;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 gauss_kernel proc
-
-;; TODO: implement variable sizing
 
 ;; Save nonvolatile registers
 push RSI

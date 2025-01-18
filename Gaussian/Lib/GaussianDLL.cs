@@ -1,4 +1,4 @@
-﻿#define DEBUG_EXTERNS_ASM
+﻿//#define DEBUG_EXTERNS_ASM
 //#define DEBUG_EXTERNS_HLL
 
 #if DEBUG_EXTERNS_ASM
@@ -75,18 +75,6 @@ namespace Gaussian.Lib
 
     public unsafe class GaussianDLL : DLL
     {
-        public delegate void d_filter(
-            sbyte* kernel,
-            int radius,
-            byte* src,
-            byte* dest,
-            int width,
-            int height,
-            int stride,
-
-            int y1,
-            int y2
-        );
 
         public delegate void d_gauss_kernel(
             byte* kernel,
@@ -95,16 +83,6 @@ namespace Gaussian.Lib
 
         public delegate int d_gauss_kernel_size(
             int radius
-        );
-
-        public delegate void d_filter_24bpp_k3(
-            byte* kernel,
-            byte* src,
-            byte* dest,
-            int startIndex,
-            int endIndex,
-            int width,
-            int stride
         );
 
         public delegate void d_filter_uniform(
@@ -119,11 +97,9 @@ namespace Gaussian.Lib
             int stride
         );
 
-        //public d_filter filter;
-        public d_gauss_kernel gauss_kernel;
-        public d_gauss_kernel_size gauss_kernel_size;
-        //public d_filter_24bpp_k3 filter_24bpp_k3;
-        public d_filter_uniform filter_uniform;
+        protected d_gauss_kernel gauss_kernel;
+        protected d_gauss_kernel_size gauss_kernel_size;
+        protected d_filter_uniform filter_uniform;
 
         public GaussianDLL(string path) : base(path)
         {
@@ -166,19 +142,10 @@ namespace Gaussian.Lib
             );
         }
 
-        public void Filter(Mat src, Mat dest, GKernel kernel, int startIndex = 0, int? endIndex = null)
+        public void GaussKernel(GKernel kernel)
         {
-            FilterUniformRaw(
-                (byte*)kernel.Ptr(),
-                kernel.Radius,
-                src.Data,
-                dest.Data,
-                startIndex,
-                endIndex ?? src.Height - 1,
-                src.Width,
-                src.Height,
-                src.Stride
-            );
+            gauss_kernel((byte*)kernel.Ptr(), kernel.Radius);
+            kernel.Unlock();
         }
     }
 }

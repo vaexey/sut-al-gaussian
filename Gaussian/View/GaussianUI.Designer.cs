@@ -98,7 +98,7 @@
             pictureBefore.Dock = DockStyle.Fill;
             pictureBefore.Location = new Point(0, 0);
             pictureBefore.Name = "pictureBefore";
-            pictureBefore.Size = new Size(397, 420);
+            pictureBefore.Size = new Size(389, 420);
             pictureBefore.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBefore.TabIndex = 1;
             pictureBefore.TabStop = false;
@@ -108,7 +108,7 @@
             pictureAfter.Dock = DockStyle.Fill;
             pictureAfter.Location = new Point(0, 0);
             pictureAfter.Name = "pictureAfter";
-            pictureAfter.Size = new Size(382, 420);
+            pictureAfter.Size = new Size(390, 420);
             pictureAfter.SizeMode = PictureBoxSizeMode.Zoom;
             pictureAfter.TabIndex = 2;
             pictureAfter.TabStop = false;
@@ -116,6 +116,7 @@
             // pictureSplitContainer
             // 
             pictureSplitContainer.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pictureSplitContainer.IsSplitterFixed = true;
             pictureSplitContainer.Location = new Point(6, 6);
             pictureSplitContainer.Name = "pictureSplitContainer";
             // 
@@ -127,7 +128,7 @@
             // 
             pictureSplitContainer.Panel2.Controls.Add(pictureAfter);
             pictureSplitContainer.Size = new Size(783, 420);
-            pictureSplitContainer.SplitterDistance = 397;
+            pictureSplitContainer.SplitterDistance = 389;
             pictureSplitContainer.TabIndex = 3;
             // 
             // tabControl1
@@ -387,6 +388,7 @@
             // histSplitContainer
             // 
             histSplitContainer.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            histSplitContainer.IsSplitterFixed = true;
             histSplitContainer.Location = new Point(6, 432);
             histSplitContainer.Name = "histSplitContainer";
             // 
@@ -398,24 +400,28 @@
             // 
             histSplitContainer.Panel2.Controls.Add(histAfter);
             histSplitContainer.Size = new Size(783, 106);
-            histSplitContainer.SplitterDistance = 397;
+            histSplitContainer.SplitterDistance = 389;
             histSplitContainer.TabIndex = 5;
             // 
             // histBefore
             // 
+            histBefore.BorderStyle = BorderStyle.Fixed3D;
             histBefore.Dock = DockStyle.Fill;
             histBefore.Location = new Point(0, 0);
             histBefore.Name = "histBefore";
-            histBefore.Size = new Size(397, 106);
+            histBefore.Size = new Size(389, 106);
+            histBefore.SizeMode = PictureBoxSizeMode.StretchImage;
             histBefore.TabIndex = 1;
             histBefore.TabStop = false;
             // 
             // histAfter
             // 
+            histAfter.BorderStyle = BorderStyle.Fixed3D;
             histAfter.Dock = DockStyle.Fill;
             histAfter.Location = new Point(0, 0);
             histAfter.Name = "histAfter";
-            histAfter.Size = new Size(382, 106);
+            histAfter.Size = new Size(390, 106);
+            histAfter.SizeMode = PictureBoxSizeMode.StretchImage;
             histAfter.TabIndex = 2;
             histAfter.TabStop = false;
             // 

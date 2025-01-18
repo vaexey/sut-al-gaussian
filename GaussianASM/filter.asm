@@ -1,33 +1,17 @@
-;; Extern to print stdout
-; extern __imp_wprintf:qword
-
 .const
-
-MSG_BEGIN DB "filter_uniform begin",0
 
 ;; bytes per pixel const
 BPP DQ 3
 
 CONST_0 DQ 0,0,0,0
 
-;SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,18,0FFH,21,0FFH,24,0FFH,27,0FFH,30,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
-;SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,16,0FFH,19,0FFH,22,0FFH,25,0FFH,28,0FFH,31,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
-
+;; Shuffle masks for extracting every third byte
 SHUF_MASK_B DB 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,0FFH,0FFH,0FFH,0FFH, 0FFH,0FFH,2,0FFH,5,0FFH,8,0FFH,11,0FFH,14,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 SHUF_MASK_G DB 1,0FFH,4,0FFH,7,0FFH,10,0FFH,13,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH, 0,0FFH,3,0FFH,6,0FFH,9,0FFH,12,0FFH,15,0FFH,0FFH,0FFH,0FFH,0FFH
 
-;SHUF_MASK_KGEN_R5_1 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,6,0FFH,7,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
-;SHUF_MASK_KGEN_R5_2 DB 0,0FFH,1,0FFH,2,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
-
+;; Shuffle masks for converting byte kernel to word kernel
 SHUF_MASK_KGEN_R5_1 DB 0,0FFH,1,0FFH,2,0FFH,3,0FFH,4,0FFH,5,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH,0FFH
 SHUF_MASK_KGEN_R5_2 DB 5,0FFH,6,0FFH,7,0FFH,8,0FFH,9,0FFH,10,0FFH,0FFH,0FFH,0FFH,0FFH,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
-
-KERN_R5_ROW_0 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-KERN_R5_ROW_1 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-KERN_R5_ROW_2 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-KERN_R5_ROW_3 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-KERN_R5_ROW_4 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
-KERN_R5_ROW_5 DW 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2
 
 .code
 
@@ -48,14 +32,9 @@ row_mult_5 macro sourceRow, shufMask, kernRow, sum
 
 ;; Shuffle B bytes into words (all B bytes joined with 0x00 byte)
 vpshufb YMM0, sourceRow, ymmword ptr [shufMask]
-;vmovups YMM1, ymmword ptr [shufMask]
-;vmovups YMM2, sourceRow
-;vmovups YMM3, YMM0
 
 ;; Multiply row by appropriate kernel row
 vpmullw YMM0, YMM0, ymmword ptr [kernRow]
-;vmovups YMM4, ymmword ptr [kernRow]
-;vmovups YMM5, YMM0
 
 ;; Sum horizontally weighted values until all are accumulated in two qwords
 ;; 1st iteration of word vertical sum
@@ -64,7 +43,6 @@ vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
 vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
 ;; 3rd iteration of word vertical sum
 vphaddw YMM0, YMM0, ymmword ptr [CONST_0]
-;vmovups YMM7, YMM0
 
 ;; Extract lower half
 movq RBX, XMM0
@@ -129,8 +107,7 @@ endm
 ;;	uint64_t stride
 ;;)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Applies gauss filter
-;; TODO: DOCS
+;; Applies specified 11x11 filter
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 filter_uniform proc
 
@@ -149,13 +126,13 @@ push R14
 push R15
 
 ;; Stack variables
-;; 0x08 - 
-;; 0x10 - 
-;; 0x18 - 
-;; 0x20 - 
-;; 0x28
-;; 0x30
-;; 0x38
+;; 0x08 - reserved
+;; 0x10 - reserved
+;; 0x18 - reserved
+;; 0x20 - reserved
+;; 0x28 - reserved
+;; 0x30 - reserved
+;; 0x38 - reserved
 ;; 0x40 - tempSrcIdx
 ;; 0x48 - KSIZE
 ;; 0x50 - KLEN
@@ -311,8 +288,8 @@ mov R8, [RBP+030h]
 
 ;; Safety measure: skip dangerous y range by shrinking by radius
 mov RAX, [RBP+018h]
-add R8, RAX
-sub [RBP+038h], RAX
+;add R8, RAX
+;sub [RBP+038h], RAX
 
 ;; Safety measure #2: skip dangerous y end range
 ;sub qword ptr [RBP+038h], 20
